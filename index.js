@@ -20,10 +20,23 @@ function getEngineProvider(walletProv) {
   })
 }
 
+function getAccountsAsync(engineProvider) {
+  return new Promise((resolve, reject) => {
+    engineProvider.sendAsync({ method: 'eth_accounts', params: [] }, (error, response) => {
+      if (error) {
+        reject(error)
+      } else {
+        resolve(response)
+      }
+    })
+  })
+}
+
 async function run() {
   const wallet = generate()
   const walletProv = generateWallerProvider(wallet)
-  const web3Wallet = new Web3(getEngineProvider(walletProv))
+  const engineProvider = getEngineProvider(walletProv)
+  const web3Wallet = new Web3(engineProvider)
   const web3 = new Web3(`http://localhost:${GANACHE_PORT}/`)
 
   const netId = await web3.eth.net.getId()
@@ -70,6 +83,11 @@ async function run() {
   console.log(`${primary}: ${web3.utils.fromWei(primaryBalanceFinal, 'ether')} ether`)
   console.log(`${walletAddress}: ${web3.utils.fromWei(walletBalanceFinal, 'ether')} ether`)
   console.log('================\n')
+
+  // Try the user's test
+  console.log('Trying sendAsync...')
+  const res = await getAccountsAsync(engineProvider)
+  console.log('wallet account: ', res.result[0])
 }
 function main() {
   const server = ganache.server({
